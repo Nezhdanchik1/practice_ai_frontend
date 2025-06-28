@@ -1,0 +1,152 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Stage, Layer, Rect, Image as KonvaImage } from 'react-konva';
+import * as pdfjsLib from 'pdfjs-dist';
+import 'pdfjs-dist/build/pdf.worker.entry';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+function PDFCropper({ pdfFile }) {
+  const [images, setImages] = useState([]);
+  const [bboxes, setBboxes] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [newBox, setNewBox] = useState(null);
+  const containerRef = useRef();
+
+  useEffect(() => {
+    const renderPDF = async () => {
+      const fileReader = new FileReader();
+      fileReader.onload = async () => {
+        const typedarray = new Uint8Array(fileReader.result);
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+        const pages = [];
+
+        for (let i = 0; i < pdf.numPages; i++) {
+          const page = await pdf.getPage(i + 1);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          await page.render({ canvasContext: context, viewport }).promise;
+          const img = new window.Image();
+          img.src = canvas.toDataURL();
+          await new Promise(resolve => {
+            img.onload = () => resolve();
+          });
+          pages.push({ img, width: canvas.width, height: canvas.height });
+        }
+
+        setImages(pages);
+      };
+      fileReader.readAsArrayBuffer(pdfFile);
+    };
+
+    if (pdfFile) renderPDF();
+  }, [pdfFile]);
+
+  const handleMouseDown = (e, pageIndex, width, height) => {
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    setIsDrawing(true);
+    setNewBox({
+      pageIndex,
+      startX: pointer.x,
+      startY: pointer.y,
+      endX: pointer.x,
+      endY: pointer.y,
+      width,
+      height
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDrawing || !newBox) return;
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    setNewBox({
+      ...newBox,
+      endX: pointer.x,
+      endY: pointer.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    if (!isDrawing || !newBox) return;
+
+    const { startX, startY, endX, endY, width, height, pageIndex } = newBox;
+
+    const x1 = Math.min(startX, endX) / width;
+    const y1 = Math.min(startY, endY) / height;
+    const x2 = Math.max(startX, endX) / width;
+    const y2 = Math.max(startY, endY) / height;
+
+    setBboxes(prev => [...prev, { pageIndex, bbox: [x1, y1, x2, y2] }]);
+    setIsDrawing(false);
+    setNewBox(null);
+  };
+
+  const generateBBoxMap = () => {
+    const lines = bboxes.map(b => {
+      const [x1, y1, x2, y2] = b.bbox.map(n => n.toFixed(2));
+      return ` {${b.pageIndex}, [4]float64{${x1}, ${y1}, ${x2}, ${y2}}},`;
+    });
+    console.log("bboxMap = []BBoxMeta{");
+    lines.forEach(l => console.log(l));
+    console.log("}");
+  };
+
+  return (
+    <div ref={containerRef}>
+      {images.map((imgObj, pageIndex) => {
+        const { img, width, height } = imgObj;
+        return (
+          <div key={pageIndex} style={{ marginBottom: '30px' }}>
+            <Stage
+              width={width}
+              height={height}
+              onMouseDown={(e) => handleMouseDown(e, pageIndex, width, height)}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+            >
+              <Layer>
+                <KonvaImage image={img} width={width} height={height} />
+              </Layer>
+              <Layer>
+                {bboxes
+                  .filter(b => b.pageIndex === pageIndex)
+                  .map((b, idx) => {
+                    const [x1, y1, x2, y2] = b.bbox;
+                    return (
+                      <Rect
+                        key={idx}
+                        x={x1 * width}
+                        y={y1 * height}
+                        width={(x2 - x1) * width}
+                        height={(y2 - y1) * height}
+                        stroke="red"
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
+                {isDrawing && newBox && newBox.pageIndex === pageIndex && (
+                  <Rect
+                    x={Math.min(newBox.startX, newBox.endX)}
+                    y={Math.min(newBox.startY, newBox.endY)}
+                    width={Math.abs(newBox.endX - newBox.startX)}
+                    height={Math.abs(newBox.endY - newBox.startY)}
+                    stroke="blue"
+                    dash={[4, 4]}
+                  />
+                )}
+              </Layer>
+            </Stage>
+          </div>
+        );
+      })}
+      <button onClick={generateBBoxMap}>Сгенерировать bboxMap</button>
+    </div>
+  );
+}
+
+export default PDFCropper;
