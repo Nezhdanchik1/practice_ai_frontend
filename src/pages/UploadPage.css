@@ -1,0 +1,42 @@
+/* src/pages/UploadPage.css */
+
+.upload-container {
+  max-width: 500px;
+  margin: 80px auto;
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.upload-box {
+  border: 2px dashed #999;
+  border-radius: 10px;
+  padding: 40px 20px;
+  margin: 20px 0;
+  cursor: pointer;
+  background-color: #fafafa;
+}
+
+.upload-label {
+  display: block;
+  color: #555;
+  font-size: 16px;
+}
+
+.upload-button {
+  background-color: #007bff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.upload-button:hover {
+  background-color: #0056b3;
+}
+
+.error-text {
+  color: red;
+  font-size: 14px;
+}
