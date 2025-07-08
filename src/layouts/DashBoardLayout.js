@@ -10,9 +10,10 @@ const DashboardLayout = () => {
       <Row>
         {/* Sidebar */}
         <Col xs={12} md={3} lg={2} className="bg-light vh-100 p-3 border-end">
-          <h4 className="mb-4">📚 SmartGrader</h4>
+          <h4 className="mb-4">SmartGrader</h4>
           <Nav className="flex-column">
             <NavLink to="/" className="nav-link">🏠 Главная</NavLink>
+            <NavLink to="/exams" className="nav-link">📚 Экзамены</NavLink>
             <NavLink to="/upload" className="nav-link">✂️ Обрезка</NavLink>
           </Nav>
         </Col>

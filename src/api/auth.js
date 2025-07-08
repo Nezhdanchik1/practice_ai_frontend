@@ -1,7 +1,7 @@
 // src/api/auth.js
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8080'; // замени на адрес твоего Go API
+const API_BASE = 'http://localhost:8082/api/v1/auth'; // замени на адрес твоего Go API
 
 // Регистрация
 export async function register(email, password) {
