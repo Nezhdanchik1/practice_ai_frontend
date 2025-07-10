@@ -5,7 +5,7 @@ import { fetchExams, createExam, deleteExam } from '../api/exams';
 const ExamsPage = () => {
   const [exams, setExams] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [newExam, setNewExam] = useState({ name: '', date: '' });
+  const [newExam, setNewExam] = useState({ crn: '', date: '' });
 
   useEffect(() => {
     loadExams();
@@ -23,7 +23,7 @@ const ExamsPage = () => {
   const handleAddExam = async () => {
     try {
       await createExam(newExam);
-      setNewExam({ name: '', date: '' });
+      setNewExam({ crn: '', date: '' });
       setShowModal(false);
       loadExams();
     } catch (err) {
@@ -55,7 +55,7 @@ const ExamsPage = () => {
         <thead>
           <tr>
             <th>#</th>
-            <th>Название</th>
+            <th>CRN</th>
             <th>Дата</th>
             <th>Действия</th>
           </tr>
@@ -64,7 +64,7 @@ const ExamsPage = () => {
           {exams.map((exam, idx) => (
             <tr key={exam.id}>
               <td>{idx + 1}</td>
-              <td>{exam.name}</td>
+              <td>{exam.crn}</td>
               <td>{exam.date}</td>
               <td>
                 <Button variant="danger" size="sm" onClick={() => handleDelete(exam.id)}>
@@ -83,12 +83,12 @@ const ExamsPage = () => {
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>Название</Form.Label>
+              <Form.Label>CRN</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Напр. Математика 11 класс"
-                value={newExam.name}
-                onChange={e => setNewExam({ ...newExam, name: e.target.value })}
+                placeholder="Напр. MATH9A"
+                value={newExam.crn}
+                onChange={e => setNewExam({ ...newExam, crn: e.target.value })}
               />
             </Form.Group>
             <Form.Group>

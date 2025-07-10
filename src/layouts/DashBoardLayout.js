@@ -15,6 +15,7 @@ const DashboardLayout = () => {
             <NavLink to="/" className="nav-link">🏠 Главная</NavLink>
             <NavLink to="/exams" className="nav-link">📚 Экзамены</NavLink>
             <NavLink to="/upload" className="nav-link">✂️ Обрезка</NavLink>
+            <NavLink to="/logout" className="nav-link">🚪 Выход</NavLink>
           </Nav>
         </Col>
 
