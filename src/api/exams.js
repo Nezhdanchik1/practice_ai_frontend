@@ -1,17 +1,15 @@
-import axios from 'axios';
-
-const API_BASE = 'http://localhost:8081/exams';
+import api from './axios';
 
 export async function fetchExams() {
-  const res = await axios.get(API_BASE);
+  const res = await api.get("/exams");
   return res.data;
 }
 
 export async function createExam(exam) {
-  const res = await axios.post(API_BASE, exam);
+  const res = await api.post("/exams", exam);
   return res.data;
 }
 
 export async function deleteExam(id) {
-  await axios.delete(`${API_BASE}/${id}`);
+  await api.delete(`${"/exams"}/${id}`);
 }
