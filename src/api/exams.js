@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8080/api/v1/exams';
+const API_BASE = 'http://localhost:8081/exams';
 
 export async function fetchExams() {
   const res = await axios.get(API_BASE);
