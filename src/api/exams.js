@@ -1,15 +1,7 @@
+// src/api/exams.js
 import api from './axios';
 
-export async function fetchExams() {
-  const res = await api.get("/exams");
-  return res.data;
-}
-
-export async function createExam(exam) {
-  const res = await api.post("/exams", exam);
-  return res.data;
-}
-
-export async function deleteExam(id) {
-  await api.delete(`${"/exams"}/${id}`);
-}
+export const fetchExams = () => api.get('/exams/').then(res => res.data);
+export const createExam = (exam) => api.post('/exams/', exam);
+export const getExamById = (id) => api.get(`/exams/${id}`).then(res => res.data);
+export const deleteExam = (id) => api.delete(`/exams/${id}`);

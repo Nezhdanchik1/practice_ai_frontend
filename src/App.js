@@ -1,14 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import UploadPage from './pages/UploadPage';
-import CropPage from './pages/CropPage';
-import PreviewPage from './pages/PreviewPage';
-import DashboardPage from './pages/DashBoardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardLayout from './layouts/DashBoardLayout';
 import PrivateRoute from './components/PrivateRoute';
 import ExamsPage from './pages/ExamsPage';
+import ExamDetailPage from './pages/ExamDetailPage';
+import CropTemplatePage from './pages/CropTemplatePage';
 
 const App = () => {
   return (
@@ -26,14 +25,13 @@ const App = () => {
             </PrivateRoute>
           }
         >
-          <Route path="/" element={<DashboardPage />} />
           <Route path="/upload" element={<UploadPage />} />
-          <Route path="/crop" element={<CropPage />} />
-          <Route path="/preview" element={<PreviewPage />} />
           <Route path="/exams" element={<ExamsPage />} />
+          <Route path="/exams/:id" element={<ExamDetailPage />} />
+          <Route path="/crop-template" element={<CropTemplatePage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/exams" />} />
       </Routes>
     </Router>
   );

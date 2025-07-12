@@ -1,57 +1,80 @@
 // src/pages/UploadPage.js
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import PDFPreviewAllPages from '../components/PDFPreviewAllPages';
-import './UploadPage.css';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getExamById, deleteExam } from '../api/exams';
+import { Button, Form } from 'react-bootstrap';
+import axios from '../api/axios';
 
 const UploadPage = () => {
-  const [pdfFile, setPdfFile] = useState(null);
-  const [error, setError] = useState('');
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [exam, setExam] = useState(null);
+  const [file, setFile] = useState(null);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      setPdfFile(file);
-      setError('');
-    } else {
-      setPdfFile(null);
-      setError('Пожалуйста, загрузите PDF файл.');
+  useEffect(() => {
+    loadExam();
+  }, []);
+
+  const loadExam = async () => {
+    try {
+      const data = await getExamById(id);
+      setExam(data);
+    } catch {
+      alert('Не удалось загрузить экзамен');
+      navigate('/exams');
     }
   };
 
-  const handleSubmit = () => {
-    if (pdfFile) {
-      navigate('/crop', { state: { pdfFile } });
-    } else {
-      setError('Сначала выберите PDF файл.');
+  const handleFileUpload = async () => {
+    if (!file) return alert('Выберите файл');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('exam_id', id);
+
+    try {
+      await axios.post('/answers/upload', formData);
+      alert('Файл успешно загружен');
+    } catch {
+      alert('Ошибка при загрузке файла');
+    }
+  };
+
+  const handleDeleteExam = async () => {
+    if (window.confirm('Удалить экзамен?')) {
+      try {
+        await deleteExam(id);
+        alert('Экзамен удалён');
+        navigate('/exams');
+      } catch {
+        alert('Ошибка при удалении экзамена');
+      }
     }
   };
 
   return (
-    <div className="upload-container">
-      <h1>Загрузите PDF экзамена</h1>
+    <div>
+      <h3>Экзамен #{exam?.id} — {exam?.crn}</h3>
+      <p><strong>Дата:</strong> {exam?.date}</p>
 
-      <div className="upload-box">
-        <input
+      <Form.Group className="mb-3">
+        <Form.Label>Загрузите PDF с ответами</Form.Label>
+        <Form.Control
           type="file"
           accept="application/pdf"
-          onChange={handleFileChange}
-          id="file-upload"
-          hidden
+          onChange={(e) => setFile(e.target.files[0])}
         />
-        <label htmlFor="file-upload" className="upload-label">
-          {pdfFile ? pdfFile.name : 'Нажмите или перетащите PDF сюда'}
-        </label>
-      </div>
+      </Form.Group>
 
-      {error && <p className="error-text">{error}</p>}
-
-      {pdfFile && <PDFPreviewAllPages pdfFile={pdfFile} />}
-
-      <button className="upload-button" onClick={handleSubmit}>
-        Продолжить
-      </button>
+      <Button variant="primary" onClick={handleFileUpload}>
+        📤 Загрузить файл
+      </Button>{' '}
+      <Button variant="danger" onClick={handleDeleteExam}>
+        🗑 Удалить экзамен
+      </Button>{' '}
+      <Button variant="secondary" onClick={() => navigate('/exams')}>
+        ⬅ Назад
+      </Button>
     </div>
   );
 };

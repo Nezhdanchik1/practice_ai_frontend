@@ -13,7 +13,7 @@ function LoginPage() {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/exams');
     } catch (err) {
       alert('Ошибка входа: ' + (err.response?.data?.message || err.message));
     }

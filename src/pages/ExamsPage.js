@@ -1,11 +1,16 @@
+// src/pages/ExamsPage.js
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
-import { fetchExams, createExam, deleteExam } from '../api/exams';
+import { useNavigate } from 'react-router-dom';
+import { fetchExams, createExam } from '../api/exams';
 
 const ExamsPage = () => {
   const [exams, setExams] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newExam, setNewExam] = useState({ crn: '', date: '' });
+  const navigate = useNavigate();
+
+  console.log(exams)
 
   useEffect(() => {
     loadExams();
@@ -15,7 +20,7 @@ const ExamsPage = () => {
     try {
       const data = await fetchExams();
       setExams(data);
-    } catch (err) {
+    } catch {
       alert('Ошибка при загрузке экзаменов');
     }
   };
@@ -26,19 +31,8 @@ const ExamsPage = () => {
       setNewExam({ crn: '', date: '' });
       setShowModal(false);
       loadExams();
-    } catch (err) {
+    } catch {
       alert('Ошибка при добавлении экзамена');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Удалить экзамен?')) {
-      try {
-        await deleteExam(id);
-        loadExams();
-      } catch (err) {
-        alert('Ошибка при удалении экзамена');
-      }
     }
   };
 
@@ -67,8 +61,12 @@ const ExamsPage = () => {
               <td>{exam.crn}</td>
               <td>{exam.date}</td>
               <td>
-                <Button variant="danger" size="sm" onClick={() => handleDelete(exam.id)}>
-                  Удалить
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={() => navigate(`/exams/${exam["gorm_._model"]?.ID}`)}
+                >
+                  Войти
                 </Button>
               </td>
             </tr>
