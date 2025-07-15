@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Stage, Layer, Rect, Transformer, Image as KonvaImage, Text } from 'react-konva';
 import * as pdfjsLib from 'pdfjs-dist';
 import 'pdfjs-dist/build/pdf.worker.entry';
@@ -6,12 +6,14 @@ import './PDFCropper.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-function PDFCropper({ pdfFile }) {
+const PDFCropper = forwardRef(({ pdfFile, onGenerate }, ref) => {
   const [images, setImages] = useState([]);
   const [bboxes, setBboxes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [bboxMapText, setBBoxMapText] = useState('');
-  const transformerRefs = useRef({});
+
+  useImperativeHandle(ref, () => ({
+    generateBBoxMap
+  }));
 
   useEffect(() => {
     const renderPDF = async () => {
@@ -79,19 +81,14 @@ function PDFCropper({ pdfFile }) {
       const y1 = (b.y / img.height).toFixed(2);
       const x2 = ((b.x + b.width) / img.width).toFixed(2);
       const y2 = ((b.y + b.height) / img.height).toFixed(2);
-      return ` {${b.pageIndex}, [4]float64{${x1}, ${y1}, ${x2}, ${y2}}},`;
+      return {
+        page: b.pageIndex,
+        bbox_percent: [parseFloat(x1), parseFloat(y1), parseFloat(x2), parseFloat(y2)]
+      };
     });
 
-    const fullText = `var bboxMap = []BBoxMeta{\n${result.join('\n')}\n}`;
-    setBBoxMapText(fullText);
-  };
-
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(bboxMapText);
-      alert('Скопировано!');
-    } catch (e) {
-      alert('Ошибка при копировании');
+    if (onGenerate) {
+      onGenerate(result);
     }
   };
 
@@ -123,6 +120,17 @@ function PDFCropper({ pdfFile }) {
                         stroke={b.id === selectedId ? 'blue' : 'red'}
                         strokeWidth={2}
                         draggable
+                        onDragEnd={e => {
+                          const node = e.target;
+                          const newX = node.x();
+                          const newY = node.y();
+                          const updated = bboxes.map(box =>
+                            box.id === b.id
+                              ? { ...box, x: newX, y: newY }
+                              : box
+                          );
+                          setBboxes(updated);
+                        }}
                         dragBoundFunc={pos => {
                           const page = images[b.pageIndex];
                           const width = b.width;
@@ -148,7 +156,6 @@ function PDFCropper({ pdfFile }) {
                           node.scaleX(1);
                           node.scaleY(1);
 
-                          // Ограничение справа и снизу
                           if (newX + newWidth > page.width) {
                             newWidth = page.width - newX;
                           }
@@ -156,7 +163,6 @@ function PDFCropper({ pdfFile }) {
                             newHeight = page.height - newY;
                           }
 
-                          // Ограничение сверху и слева
                           if (newX < 0) {
                             newWidth += newX;
                             newX = 0;
@@ -238,20 +244,10 @@ function PDFCropper({ pdfFile }) {
       ))}
 
       <div className="cropper-action-buttons">
-        <button className="cropper-btn" onClick={generateBBoxMap}>🧩 Сгенерировать bboxMap</button>
-        <button className="cropper-btn secondary" onClick={copyToClipboard}>📋 Копировать bboxMap</button>
+        <button className="cropper-btn" onClick={generateBBoxMap}>💾 Сохранить шаблон в базу</button>
       </div>
-
-      {bboxMapText && (
-        <textarea
-          className="cropper-textarea"
-          value={bboxMapText}
-          readOnly
-          rows={10}
-        />
-      )}
     </div>
   );
-}
+});
 
 export default PDFCropper;

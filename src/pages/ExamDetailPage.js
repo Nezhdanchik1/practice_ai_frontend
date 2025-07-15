@@ -145,9 +145,15 @@ const ExamDetailPage = () => {
         </Button>
         <Button
           variant="warning"
-          onClick={() => navigate('/crop-template')}
+          onClick={() => navigate(`/exams/${examId}/crop-template`)}
         >
           ✂️ Создать шаблон обрезки
+        </Button>
+        <Button
+          variant="info"
+          onClick={() => navigate(`/exams/${examId}/bboxes`)}
+        >
+          📄 Посмотреть шаблоны BBox
         </Button>
       </div>
 

@@ -8,6 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ExamsPage from './pages/ExamsPage';
 import ExamDetailPage from './pages/ExamDetailPage';
 import CropTemplatePage from './pages/CropTemplatePage';
+import BBoxTemplateListPage from './pages/BBoxTemplateListPage';
 
 const App = () => {
   return (
@@ -28,7 +29,8 @@ const App = () => {
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/exams" element={<ExamsPage />} />
           <Route path="/exams/:id" element={<ExamDetailPage />} />
-          <Route path="/crop-template" element={<CropTemplatePage />} />
+          <Route path="/exams/:id/crop-template" element={<CropTemplatePage />} />
+          <Route path="/exams/:examId/bboxes" element={<BBoxTemplateListPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/exams" />} />
