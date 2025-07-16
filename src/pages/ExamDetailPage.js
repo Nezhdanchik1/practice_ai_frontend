@@ -1,21 +1,22 @@
-// src/pages/ExamDetailPage.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getExamById, deleteExam } from '../api/exams';
 import {
   getAnswersByExam,
   uploadAnswer,
+  uploadZipAnswers,
   updateAnswerGrade,
-  deleteAnswer
+  deleteAnswer,
 } from '../api/answers';
 import { Button, Table, Form } from 'react-bootstrap';
 
 const ExamDetailPage = () => {
-  const { id: examId } = useParams(); // id из URL
+  const { id: examId } = useParams();
   const navigate = useNavigate();
   const [exam, setExam] = useState(null);
   const [answers, setAnswers] = useState([]);
-  const [file, setFile] = useState(null);
+  const [filePdf, setFilePdf] = useState(null);
+  const [fileZip, setFileZip] = useState(null);
 
   useEffect(() => {
     loadExam();
@@ -25,7 +26,6 @@ const ExamDetailPage = () => {
   const loadExam = async () => {
     try {
       const data = await getExamById(examId);
-      // Если id вложен в gorm_._model, достаём его
       const realId = data?.['gorm_._model']?.ID || data?.id;
       setExam({ ...data, id: realId });
     } catch {
@@ -42,18 +42,15 @@ const ExamDetailPage = () => {
   const loadAnswers = async () => {
     try {
       const data = await getAnswersByExam(examId);
-
       if (!Array.isArray(data)) {
         setAnswers([]);
         return;
       }
-
       const normalized = data.map((a) => ({
         ...a,
         id: a?.['gorm_._model']?.ID || a.id,
-        pdf_url: normalizePdfUrl(a.pdf_url), // 🧠 подменяем ссылку
+        pdf_url: normalizePdfUrl(a.pdf_url),
       }));
-
       setAnswers(normalized);
     } catch (err) {
       console.error('Ошибка при загрузке ответов:', err);
@@ -71,16 +68,28 @@ const ExamDetailPage = () => {
     }
   };
 
-  const handleUpload = async () => {
-    if (!file) return alert('Выберите PDF-файл');
-
+  const handleUploadPdf = async () => {
+    if (!filePdf) return alert('Выберите PDF-файл');
     try {
-      await uploadAnswer(file, examId); // examId — из useParams
-      alert('Файл успешно загружен');
-      setFile(null);
+      await uploadAnswer(filePdf, examId);
+      alert('PDF успешно загружен');
+      setFilePdf(null);
       loadAnswers();
     } catch (err) {
-      alert('Ошибка загрузки файла');
+      alert('Ошибка загрузки PDF');
+      console.error(err);
+    }
+  };
+
+  const handleUploadZip = async () => {
+    if (!fileZip) return alert('Выберите ZIP-файл');
+    try {
+      await uploadZipAnswers(fileZip, examId);
+      alert('ZIP успешно загружен и обработан');
+      setFileZip(null);
+      loadAnswers();
+    } catch (err) {
+      alert('Ошибка загрузки ZIP');
       console.error(err);
     }
   };
@@ -88,10 +97,8 @@ const ExamDetailPage = () => {
   const handleGradeChange = async (answerId, value) => {
     const grade = parseFloat(value);
     if (isNaN(grade)) return;
-
     try {
       await updateAnswerGrade(answerId, grade);
-      // Не вызываем loadAnswers сразу — избегаем лишнего запроса
       setAnswers((prev) =>
         prev.map((a) => (a.id === answerId ? { ...a, grade } : a))
       );
@@ -103,7 +110,6 @@ const ExamDetailPage = () => {
 
   const handleDeleteAnswer = async (answerId) => {
     if (!window.confirm('Удалить ответ?')) return;
-
     try {
       await deleteAnswer(answerId);
       loadAnswers();
@@ -114,7 +120,6 @@ const ExamDetailPage = () => {
 
   const handleDeleteExam = async () => {
     if (!window.confirm('Удалить экзамен?')) return;
-
     try {
       await deleteExam(examId);
       alert('Экзамен удалён');
@@ -131,18 +136,35 @@ const ExamDetailPage = () => {
 
       <hr />
 
-      <h5>Загрузка нового ответа</h5>
+      <h5>Загрузка одиночного PDF ответа</h5>
       <Form.Group className="mb-3">
         <Form.Control
           type="file"
-          accept="application/pdf"
-          onChange={(e) => setFile(e.target.files[0])}
+          accept=".pdf"
+          onChange={(e) => setFilePdf(e.target.files[0])}
         />
       </Form.Group>
+      <Button variant="primary" onClick={handleUploadPdf}>
+        📤 Загрузить PDF
+      </Button>
+
+      <hr />
+
+      <h5>Загрузка ZIP с PDF ответами</h5>
+      <Form.Group className="mb-3">
+        <Form.Control
+          type="file"
+          accept=".zip"
+          onChange={(e) => setFileZip(e.target.files[0])}
+        />
+      </Form.Group>
+      <Button variant="primary" onClick={handleUploadZip}>
+        📥 Загрузить ZIP
+      </Button>
+
+      <hr />
+
       <div className="d-flex gap-2 mb-3">
-        <Button variant="primary" onClick={handleUpload}>
-          📤 Загрузить PDF
-        </Button>
         <Button
           variant="warning"
           onClick={() => navigate(`/exams/${examId}/crop-template`)}
@@ -199,7 +221,14 @@ const ExamDetailPage = () => {
                     style={{ maxWidth: '100px' }}
                   />
                 </td>
-                <td>
+                <td className="d-flex gap-2">
+                  <Button
+                    variant="success"
+                    size="sm"
+                    onClick={() => navigate(`/answers/${a.id}`)}
+                  >
+                    Открыть
+                  </Button>
                   <Button
                     variant="danger"
                     size="sm"

@@ -9,6 +9,8 @@ import ExamsPage from './pages/ExamsPage';
 import ExamDetailPage from './pages/ExamDetailPage';
 import CropTemplatePage from './pages/CropTemplatePage';
 import BBoxTemplateListPage from './pages/BBoxTemplateListPage';
+import CropResultPage from './pages/CropResultPage';
+import AnswerDetailPage from './pages/AnswerDetailPage';
 
 const App = () => {
   return (
@@ -31,6 +33,8 @@ const App = () => {
           <Route path="/exams/:id" element={<ExamDetailPage />} />
           <Route path="/exams/:id/crop-template" element={<CropTemplatePage />} />
           <Route path="/exams/:examId/bboxes" element={<BBoxTemplateListPage />} />
+          <Route path="/crop-result" element={<CropResultPage />} />
+          <Route path="/answers/:id" element={<AnswerDetailPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/exams" />} />

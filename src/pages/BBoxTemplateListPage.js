@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
-import { fetchBBoxTemplatesByExam, deleteBBoxTemplate } from '../api/bboxTemplates';
+import {
+  fetchBBoxTemplatesByExam,
+  deleteBBoxTemplate,
+  applyBBoxTemplate,
+} from '../api/bboxTemplates';
 
 export default function BBoxTemplateListPage() {
   const { examId } = useParams();
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
 
@@ -28,6 +33,23 @@ export default function BBoxTemplateListPage() {
       loadTemplates();
     } catch {
       alert('Ошибка при удалении шаблона');
+    }
+  };
+
+  const handleApply = async (tpl) => {
+    setIsLoading(true);
+    try {
+      const payload = tpl.bboxes.map((b) => ({
+        page: b.page,
+        bbox_percent: JSON.parse(b.bbox_percent),
+      }));
+
+      const result = await applyBBoxTemplate(examId, payload);
+      navigate(`/exams/${examId}`);
+    } catch (err) {
+      alert('Ошибка при применении шаблона: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,7 +79,15 @@ export default function BBoxTemplateListPage() {
                 <td>{tpl.id}</td>
                 <td>{tpl.name}</td>
                 <td>{new Date(tpl.created_at).toLocaleString()}</td>
-                <td>
+                <td className="d-flex gap-2">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleApply(tpl)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Применяется...' : 'Применить'}
+                  </Button>
                   <Button
                     variant="danger"
                     size="sm"
