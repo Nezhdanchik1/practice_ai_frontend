@@ -36,7 +36,9 @@ const ExamDetailPage = () => {
 
   const normalizePdfUrl = (url) => {
     if (!url) return '';
-    return url.replace('http://minio:9000', 'http://localhost:9000');
+    const internal = process.env.REACT_APP_MINIO_INTERNAL;
+    const external = process.env.REACT_APP_MINIO_PUBLIC;
+    return url.replace(internal, external);
   };
 
   const loadAnswers = async () => {

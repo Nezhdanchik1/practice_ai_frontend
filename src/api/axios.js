@@ -2,8 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8081', // не трогаем
-  // ❌ убираем Content-Type
+  baseURL: process.env.REACT_APP_MAIN_API
 });
 
 api.interceptors.request.use(
